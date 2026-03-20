@@ -144,8 +144,10 @@ jobs:
       - name: Start all services with docker-compose
         run: |
           docker-compose up -d
+          docker-compose ps
+          docker-compose logs
           # Ожидание инициализации (можно увеличить при необходимости)
-          sleep 30
+          sleep 60
 
       - name: Install test dependencies
         working-directory: ./tests/postman
