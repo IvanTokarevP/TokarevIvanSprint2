@@ -144,6 +144,12 @@ jobs:
       - name: Start all services with docker-compose
         run: |
           docker-compose up -d
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..30}; do
+            docker-compose exec -T postgres pg_isready -U postgres && break || sleep 2
+          done
+          echo "Waiting for services to initialize..."
+          sleep 20
           docker-compose ps
           docker-compose logs
           # Ожидание инициализации (можно увеличить при необходимости)
