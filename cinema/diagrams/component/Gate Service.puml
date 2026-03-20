@@ -1,0 +1,28 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(users, "Пользователи")
+Container(UI, "Frontend", "React", "Интерфейс пользователя")
+Container(gateway, "API Gateway", "Spring Cloud Gateway", "Единая точка входа")
+ContainerDb(db, "Database", "PostgreSQL", "Общая БД")
+System_Ext(gate_system, "Система ворот", "Датчики и исполнительные механизмы")
+
+Container_Boundary(gate, "Gate Service") {
+    Component(controller, "GateController", "Spring MVC", "Принимает запросы от Gateway")
+    Component(service, "GateService", "Spring Service", "Бизнес-логика управления воротами")
+    Component(repo, "GateRepository", "Spring Data JPA", "Доступ к БД")
+    Component(client, "GateDeviceClient", "REST Client", "Взаимодействие с системой ворот")
+}
+
+Rel(users, UI, "Управляют, мониторят", "HTTPS")
+Rel(UI, gateway, "Вызывает API", "JSON/HTTPS")
+Rel(gateway, controller, "Маршрутизирует запросы /gate/**", "HTTP")
+
+Rel(controller, service, "Вызывает")
+Rel(service, repo, "Использует")
+Rel(service, client, "Использует")
+
+Rel(repo, db, "Читает/пишет", "SQL")
+Rel(client, gate_system, "Управляет и мониторит", "API")
+
+@enduml

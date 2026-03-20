@@ -1,0 +1,28 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(users, "Пользователи")
+Container(UI, "Frontend", "React", "Интерфейс пользователя")
+Container(gateway, "API Gateway", "Spring Cloud Gateway", "Единая точка входа")
+ContainerDb(db, "Database", "PostgreSQL", "Общая БД")
+System_Ext(surveillance_system, "Система наблюдения", "Камеры, датчики")
+
+Container_Boundary(surveillance, "Surveillance Service") {
+    Component(controller, "SurveillanceController", "Spring MVC", "Принимает запросы от Gateway")
+    Component(service, "SurveillanceService", "Spring Service", "Логика обработки видео и событий")
+    Component(repo, "SurveillanceRepository", "Spring Data JPA", "Доступ к БД")
+    Component(client, "CameraClient", "REST/RTSP Client", "Взаимодействие с камерами и датчиками")
+}
+
+Rel(users, UI, "Управляют, мониторят", "HTTPS")
+Rel(UI, gateway, "Вызывает API", "JSON/HTTPS")
+Rel(gateway, controller, "Маршрутизирует запросы /surveillance/**", "HTTP")
+
+Rel(controller, service, "Вызывает")
+Rel(service, repo, "Использует")
+Rel(service, client, "Использует")
+
+Rel(repo, db, "Читает/пишет", "SQL")
+Rel(client, surveillance_system, "Получает видео и статусы", "RTSP/HTTP")
+
+@enduml

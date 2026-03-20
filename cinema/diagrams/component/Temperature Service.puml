@@ -1,0 +1,28 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(users, "Пользователи")
+Container(UI, "Frontend", "React", "Интерфейс пользователя")
+Container(gateway, "API Gateway", "Spring Cloud Gateway", "Единая точка входа")
+ContainerDb(db, "Database", "PostgreSQL", "Общая БД")
+System_Ext(temp_system, "Система температуры", "Датчики")
+
+Container_Boundary(temp, "Temperature Service") {
+    Component(controller, "TemperatureController", "Spring MVC", "Принимает запросы от Gateway")
+    Component(service, "TemperatureService", "Spring Service", "Сбор и анализ температуры")
+    Component(repo, "TemperatureRepository", "Spring Data JPA", "Доступ к БД")
+    Component(client, "SensorClient", "MQTT/HTTP Client", "Чтение показаний датчиков")
+}
+
+Rel(users, UI, "Управляют, мониторят", "HTTPS")
+Rel(UI, gateway, "Вызывает API", "JSON/HTTPS")
+Rel(gateway, controller, "Маршрутизирует запросы /temperature/**", "HTTP")
+
+Rel(controller, service, "Вызывает")
+Rel(service, repo, "Использует")
+Rel(service, client, "Опрашивает датчики")
+
+Rel(repo, db, "Читает/пишет", "SQL")
+Rel(client, temp_system, "Получает данные", "MQTT/HTTP")
+
+@enduml
