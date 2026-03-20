@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(users, "Пользователи")
+Container(UI, "Frontend", "React", "Интерфейс пользователя")
+Container(gateway, "API Gateway", "Spring Cloud Gateway", "Единая точка входа")
+ContainerDb(db, "Database", "PostgreSQL", "Общая БД")
+System_Ext(light_system, "Система освещения", "Датчики и исполнительные механизмы")
+
+Container_Boundary(light, "Light Service") {
+    Component(controller, "LightController", "Spring MVC", "Принимает запросы от Gateway")
+    Component(service, "LightService", "Spring Service", "Бизнес-логика управления освещением")
+    Component(repo, "LightRepository", "Spring Data JPA", "Доступ к БД")
+    Component(client, "LightDeviceClient", "REST Client", "Взаимодействие с системой освещения")
+}
+
+Rel(users, UI, "Управляют, мониторят", "HTTPS")
+Rel(UI, gateway, "Вызывает API", "JSON/HTTPS")
+Rel(gateway, controller, "Маршрутизирует запросы /light/**", "HTTP")
+
+Rel(controller, service, "Вызывает", "синхронно")
+Rel(service, repo, "Использует")
+Rel(service, client, "Использует")
+
+Rel(repo, db, "Читает/пишет", "SQL")
+Rel(client, light_system, "Управляет и мониторит", "API")
+
+LAYOUT_WITH_LEGEND()
+@enduml

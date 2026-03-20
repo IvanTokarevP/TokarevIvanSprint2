@@ -1,0 +1,86 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' Титул
+title Контейнерная диаграмма C4 — КиноБездна (целевая микросервисная архитектура)
+
+' Персона
+Person(user, "Пользователь", "Пользователь сервиса (мобильное устройство, ноутбук, Smart TV)")
+
+' Внешние системы
+System_Ext(recommendation, "Рекомендательная система", "Сторонняя система, предоставляющая персональные рекомендации")
+System_Ext(cicd, "CI/CD Pipeline", "GitLab CI / Jenkins", "Автоматическая сборка, тестирование и деплой в Kubernetes")
+
+' Граница системы "КиноБездна" — всё развернуто в Kubernetes
+System_Boundary(kino, "КиноБездна (Kubernetes Cluster)") {
+
+    ' Единая точка входа
+    Container(gateway, "API Gateway", "Nginx/Kong", "Единая точка входа, маршрутизация запросов, аутентификация, агрегация ответов")
+
+    ' Микросервисы и их базы данных
+    Container(auth, "Auth Service", "Go", "Управление аутентификацией и авторизацией (JWT, сессии)")
+    ContainerDb(auth_db, "Auth DB", "PostgreSQL", "Хранит учётные записи, сессии, refresh-токены")
+
+    Container(user, "User Service", "Go", "Управление профилями пользователей, избранным, оценками")
+    ContainerDb(user_db, "User DB", "PostgreSQL", "Профили, избранное, оценки")
+
+    Container(content, "Content Service", "Go", "Управление метаданными фильмов, видео, жанрами, актёрами")
+    ContainerDb(content_db, "Content DB", "PostgreSQL", "Метаданные фильмов, видео, жанры, актёры")
+
+    Container(payment, "Payment Service", "Go", "Обработка платежей, транзакции, интеграция с платёжными шлюзами")
+    ContainerDb(payment_db, "Payment DB", "PostgreSQL", "Платежи, транзакции, статусы")
+
+    Container(subscription, "Subscription Service", "Go", "Управление подписками пользователей, тарифными планами")
+    ContainerDb(subscription_db, "Subscription DB", "PostgreSQL", "Подписки, планы, история изменений")
+
+    Container(discount, "Discount Service", "Go", "Управление скидками, промокодами, купонами")
+    ContainerDb(discount_db, "Discount DB", "PostgreSQL", "Скидки, промокоды, условия применения")
+
+    Container(notification, "Notification Service", "Go", "Отправка уведомлений (email, push, SMS)")
+    ContainerDb(notification_db, "Notification DB", "PostgreSQL", "Шаблоны уведомлений, история отправок")
+}
+
+' === Связи ===
+' Пользователь -> API Gateway
+Rel(user, gateway, "Использует", "HTTPS/REST")
+
+' Маршрутизация через API Gateway
+Rel(gateway, auth, "Маршрутизирует /auth/*", "HTTP")
+Rel(gateway, user, "Маршрутизирует /users/*", "HTTP")
+Rel(gateway, content, "Маршрутизирует /content/*", "HTTP")
+Rel(gateway, payment, "Маршрутизирует /payments/*", "HTTP")
+Rel(gateway, subscription, "Маршрутизирует /subscriptions/*", "HTTP")
+Rel(gateway, discount, "Маршрутизирует /discounts/*", "HTTP")
+Rel(gateway, notification, "Маршрутизирует /notifications/*", "HTTP")
+Rel(gateway, recommendation, "Маршрутизирует /recommendations/*", "HTTP/REST")
+
+' Внутренние взаимодействия микросервисов (синхронные вызовы)
+Rel(subscription, payment, "Проверяет статус платежа", "HTTP")
+Rel(subscription, discount, "Применяет скидку при оформлении", "HTTP")
+Rel(subscription, user, "Обновляет статус подписки пользователя", "HTTP/событие")
+Rel(payment, notification, "Отправляет уведомление об успешном платеже", "HTTP/событие")
+Rel(user, notification, "Уведомляет об изменениях профиля", "HTTP/событие")
+Rel(content, user, "Получает оценки/избранное для персонализации", "HTTP")
+
+' Доступ к базам данных
+Rel(auth, auth_db, "Читает/пишет", "SQL")
+Rel(user, user_db, "Читает/пишет", "SQL")
+Rel(content, content_db, "Читает/пишет", "SQL")
+Rel(payment, payment_db, "Читает/пишет", "SQL")
+Rel(subscription, subscription_db, "Читает/пишет", "SQL")
+Rel(discount, discount_db, "Читает/пишет", "SQL")
+Rel(notification, notification_db, "Читает/пишет", "SQL")
+
+' CI/CD — автоматический деплой всех компонентов в Kubernetes
+Rel(cicd, gateway, "Деплоит", "")
+Rel(cicd, auth, "Деплоит", "")
+Rel(cicd, user, "Деплоит", "")
+Rel(cicd, content, "Деплоит", "")
+Rel(cicd, payment, "Деплоит", "")
+Rel(cicd, subscription, "Деплоит", "")
+Rel(cicd, discount, "Деплоит", "")
+Rel(cicd, notification, "Деплоит", "")
+
+' Легенда
+SHOW_LEGEND()
+@enduml

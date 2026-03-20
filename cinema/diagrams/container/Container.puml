@@ -1,0 +1,96 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' Титул
+title Контейнерная диаграмма C4 — КиноБездна (целевая микросервисная архитектура)
+
+' Персона
+Person(user, "Пользователь", "Пользователь сервиса")
+
+' Фронтенд-приложения (контейнеры)
+Container(mobile_app, "Мобильное приложение", "React Native / Swift", "Клиент для iOS/Android")
+Container(tv_app, "Smart TV приложение", "React Native / Tizen", "Клиент для Smart TV")
+Container(web_app, "Web приложение", "React / Vue", "Клиент для браузера")
+
+' Граница системы "КиноБездна" — всё развернуто в Kubernetes
+System_Boundary(k8s, "Kubernetes Cluster") {
+
+    ' Единая точка входа
+    Container(gateway, "API Gateway", "Nginx / Kong", "Маршрутизация запросов, аутентификация, агрегация ответов")
+
+    ' Микросервисы и их базы данных
+    Container(auth, "Auth & User Service", "Go", "Аутентификация, авторизация, управление профилями пользователей")
+    ContainerDb(auth_db, "Auth & User DB", "PostgreSQL", "Учётные записи, профили, избранное, оценки")
+
+    Container(payment_subscription, "Payment Service", "Go", "Обработка платежей, управление подписками (тарифы, оплата)")
+    ContainerDb(payment_subscription_db, "Payment DB", "PostgreSQL", "Платежи, транзакции, подписки")
+
+    Container(subscription_management, "Subscription Management Service", "Go", "Управление подписками пользователей (статусы, продление)")
+    ContainerDb(subscription_management_db, "Subscription Management DB", "PostgreSQL", "История подписок, статусы, уведомления")
+
+    Container(discount, "Discount Service", "Go", "Управление скидками и акциями, промокодами")
+    ContainerDb(discount_db, "Discount DB", "PostgreSQL", "Скидки, промокоды, условия применения")
+
+    Container(notification, "Notification Service", "Go", "Отправка уведомлений (email, push, SMS)")
+    ContainerDb(notification_db, "Notification DB", "PostgreSQL", "Шаблоны уведомлений, история отправок")
+
+    Container(content, "Content Service", "Go", "Управление видео-контентом, метаданными, ссылками на стриминг")
+    ContainerDb(content_db, "Content DB", "PostgreSQL", "Метаданные фильмов, видео, ссылки на файлы")
+}
+
+' Внешние системы
+System_Ext(cicd, "CI/CD Pipeline", "GitLab CI / Jenkins", "Автоматическая сборка, тестирование, деплой в Kubernetes")
+System_Ext(payment_gateway, "Платёжная система", "Stripe / YooKassa")
+System_Ext(s3_storage, "S3 Storage", "AWS S3 / MinIO", "Хранилище видео-файлов")
+System_Ext(rabbitmq, "Рекомендательная система", "Брокер сообщений RabbitMQ")
+
+' === Связи ===
+' Пользователь -> фронтенды
+Rel(user, mobile_app, "Использует", "HTTPS")
+Rel(user, tv_app, "Использует", "HTTPS")
+Rel(user, web_app, "Использует", "HTTPS")
+
+' Фронтенды -> API Gateway
+Rel(mobile_app, gateway, "Вызывает API", "HTTPS/REST")
+Rel(tv_app, gateway, "Вызывает API", "HTTPS/REST")
+Rel(web_app, gateway, "Вызывает API", "HTTPS/REST")
+
+' Маршрутизация через API Gateway
+Rel(gateway, auth, "Маршрутизирует /auth/*, /users/*", "HTTP")
+Rel(gateway, payment_subscription, "Маршрутизирует /payments/*", "HTTP")
+Rel(gateway, subscription_management, "Маршрутизирует /subscriptions/*", "HTTP")
+Rel(gateway, discount, "Маршрутизирует /discounts/*", "HTTP")
+Rel(gateway, notification, "Маршрутизирует /notifications/*", "HTTP")
+Rel(gateway, content, "Маршрутизирует /content/*", "HTTP")
+
+' Внутренние взаимодействия микросервисов
+Rel(payment_subscription, payment_gateway, "Выполняет платеж", "HTTPS/REST")
+Rel(payment_subscription, discount, "Проверяет скидку при оплате", "HTTP")
+Rel(payment_subscription, subscription_management, "Обновляет статус подписки после оплаты", "HTTP")
+Rel(subscription_management, notification, "Отправляет уведомления об изменении подписки", "HTTP")
+Rel(subscription_management, auth, "Обновляет права доступа пользователя", "HTTP")
+Rel(content, s3_storage, "Загружает/получает видеофайлы", "S3 API")
+Rel(auth, notification, "Уведомляет о регистрации/смене пароля", "HTTP")
+Rel(payment_subscription, notification, "Уведомляет платежах", "HTTP")
+
+' Асинхронное взаимодействие с рекомендательной системой через RabbitMQ
+Rel(content, rabbitmq, "Публикует события (просмотры, оценки)", "AMQP")
+
+' CI/CD деплоит все компоненты в Kubernetes
+Rel(cicd, gateway, "Деплоит", "")
+Rel(cicd, auth, "Деплоит", "")
+Rel(cicd, payment_subscription, "Деплоит", "")
+Rel(cicd, subscription_management, "Деплоит", "")
+Rel(cicd, discount, "Деплоит", "")
+Rel(cicd, notification, "Деплоит", "")
+Rel(cicd, content, "Деплоит", "")
+
+' Связи БД
+Rel(auth, auth_db, "Читает/пишет", "SQL")
+Rel(payment_subscription, payment_subscription_db, "Читает/пишет", "SQL")
+Rel(subscription_management, subscription_management_db, "Читает/пишет", "SQL")
+Rel(discount, discount_db, "Читает/пишет", "SQL")
+Rel(notification, notification_db, "Читает/пишет", "SQL")
+Rel(content, content_db, "Читает/пишет", "SQL")
+
+@enduml

@@ -1,0 +1,41 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(users, "Пользователи")
+Container(UI, "Frontend", "React", "Интерфейс пользователя")
+
+Container(light, "Light Service", "Java", "Управление освещением")
+Container(gate, "Gate Service", "Java", "Управление воротами")
+Container(surveillance, "Surveillance Service", "Java", "Наблюдение за домом")
+Container(temp, "Temperature Service", "Java", "Мониторинг температуры")
+Container(heating, "Heating Service", "Java", "Управление отоплением")
+
+Container_Boundary(gateway, "API Gateway") {
+    Component(controller, "GatewayController", "Spring MVC", "Принимает все входящие запросы от Frontend")
+    Component(router, "RoutingService", "Spring Cloud Gateway", "Маршрутизация запросов к нужному микросервису на основе пути")
+    
+    Component(lightClient, "LightServiceClient", "REST Client", "Отправляет запросы в Light Service")
+    Component(gateClient, "GateServiceClient", "REST Client", "Отправляет запросы в Gate Service")
+    Component(surveillanceClient, "SurveillanceServiceClient", "REST Client", "Отправляет запросы в Surveillance Service")
+    Component(tempClient, "TemperatureServiceClient", "REST Client", "Отправляет запросы в Temperature Service")
+    Component(heatingClient, "HeatingServiceClient", "REST Client", "Отправляет запросы в Heating Service")
+}
+
+' === Связи ===
+Rel(users, UI, "Управляют, мониторят", "HTTPS")
+Rel(UI, controller, "Вызывает API", "JSON/HTTPS")
+
+Rel(controller, router, "Передаёт запрос")
+Rel(router, lightClient, "Направляет /light/**")
+Rel(router, gateClient, "Направляет /gate/**")
+Rel(router, surveillanceClient, "Направляет /surveillance/**")
+Rel(router, tempClient, "Направляет /temperature/**")
+Rel(router, heatingClient, "Направляет /heating/**")
+
+Rel(lightClient, light, "Forward запросов", "HTTP")
+Rel(gateClient, gate, "Forward запросов", "HTTP")
+Rel(surveillanceClient, surveillance, "Forward запросов", "HTTP")
+Rel(tempClient, temp, "Forward запросов", "HTTP")
+Rel(heatingClient, heating, "Forward запросов", "HTTP")
+
+@enduml

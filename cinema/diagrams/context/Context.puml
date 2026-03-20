@@ -1,0 +1,11 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(users, "Пользователи", "Управление умным домом")
+System(smart_home, "Умный дом", "Система для мониторинга температуры и управления отоплением")
+System_Ext(heating_system, "Система отопления", "Датчики включения/отключения отопления, Датчики температуры, Регистрация датчиков")
+
+Rel(users, smart_home, "Управляют, мониторят")
+Rel(smart_home, heating_system, "Управление, мониторинг, регистрация")
+
+@enduml
