@@ -31,6 +31,10 @@ func main() {
 	// Set up HTTP routes
 	http.HandleFunc("/api/movies", handleMovies)
 	http.HandleFunc("/api/movies/health", handleHealth)
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]bool{"status": true})
+	})
 
 	// Start server
 	port := os.Getenv("PORT")
