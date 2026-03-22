@@ -97,8 +97,7 @@ INSERT INTO movies (title, description, rating) VALUES
     ('The Godfather', 'The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.', 9.2),
     ('The Dark Knight', 'When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.', 9.0),
     ('Pulp Fiction', 'The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.', 8.9),
-    ('Forrest Gump', 'The presidencies of Kennedy and Johnson, the Vietnam War, the Watergate scandal and other historical events unfold from the perspective of an Alabama man with an IQ of 75, whose only desire is to be reunited with his childhood sweetheart.', 8.8)
-ON CONFLICT (id) DO NOTHING;
+    ('Forrest Gump', 'The presidencies of Kennedy and Johnson, the Vietnam War, the Watergate scandal and other historical events unfold from the perspective of an Alabama man with an IQ of 75, whose only desire is to be reunited with his childhood sweetheart.', 8.8);
 
 -- Sample movie genres
 INSERT INTO movie_genres (movie_id, genre) VALUES
@@ -118,15 +117,13 @@ ON CONFLICT (movie_id, genre) DO NOTHING;
 INSERT INTO payments (user_id, amount) VALUES
     (1, 9.99),
     (2, 14.99),
-    (3, 19.99)
-ON CONFLICT (id) DO NOTHING;
+    (3, 19.99);
 
 -- Sample subscriptions
 INSERT INTO subscriptions (user_id, plan_type, start_date, end_date) VALUES
     (1, 'basic', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '30 days'),
     (2, 'premium', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '30 days'),
-    (3, 'family', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '30 days')
-ON CONFLICT (id) DO NOTHING;
+    (3, 'family', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '30 days');
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_movies_title ON movies(title);

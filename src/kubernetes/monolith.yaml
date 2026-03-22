@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: monolith
-        image:  ghcr.io/db-exp/cinemaabysstest/monolith:latest
+        image: ghcr.io/ivantokarevp/tokarevivansprint2/monolith:20250322   # замените на свой логин/репозиторий
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -57,7 +57,7 @@ spec:
           periodSeconds: 20
       restartPolicy: Always
       imagePullSecrets:
-        - name: dockerconfigjson
+        - name: dockerconfigsecret      # должно совпадать с именем секрета, который вы создадите
 ---
 apiVersion: v1
 kind: Service

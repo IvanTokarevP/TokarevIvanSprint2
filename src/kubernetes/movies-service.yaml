@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: movies-service
-        image: ghcr.io/db-exp/cinemaabysstest/movies-service:latest
+        image: ghcr.io/ivantokarevp/tokarevivansprint2/movies-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8081
@@ -45,13 +45,13 @@ spec:
             memory: "128Mi"
         readinessProbe:
           httpGet:
-            path: /api/movies/health
+            path: /health
             port: 8081
           initialDelaySeconds: 5
           periodSeconds: 10
         livenessProbe:
           httpGet:
-            path: /api/movies/health
+            path: /health
             port: 8081
           initialDelaySeconds: 15
           periodSeconds: 20
